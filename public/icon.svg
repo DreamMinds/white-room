@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#050a14"/>
+  <g fill="none" stroke="#38bdf8">
+    <polygon points="256,64 422,160 422,352 256,448 90,352 90,160" stroke-width="14" opacity="0.9"/>
+    <polygon points="256,120 374,188 374,324 256,392 138,324 138,188" stroke-width="6" opacity="0.5"/>
+  </g>
+  <text x="256" y="300" font-family="Segoe UI, sans-serif" font-size="150" font-weight="800" fill="#7dd3fc" text-anchor="middle">WR</text>
+</svg>

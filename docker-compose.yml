@@ -1,0 +1,25 @@
+services:
+  whiteroom-site:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 127.0.0.1:8289:80
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      traefik.enable: true
+      traefik.http.routers.whiteroom-http.entrypoints: web
+      traefik.http.routers.whiteroom-http.rule: Host(`system.janbanick.de`)
+      traefik.http.routers.whiteroom-http.middlewares: whiteroom-redirect
+      traefik.http.middlewares.whiteroom-redirect.redirectscheme.scheme: https
+      traefik.http.middlewares.whiteroom-redirect.redirectscheme.permanent: true
+      traefik.http.routers.whiteroom-https.entrypoints: websecure
+      traefik.http.routers.whiteroom-https.rule: Host(`system.janbanick.de`)
+      traefik.http.routers.whiteroom-https.tls.certresolver: letsencrypt
+      traefik.http.routers.whiteroom-https.middlewares: whiteroom-auth
+      # Basic-Auth-Zugangsdaten stehen NICHT im Repo. Sie liegen in der
+      # gitignorten docker-compose.override.yml auf dem Server (siehe
+      # docker-compose.override.yml.example als Vorlage).
+      traefik.http.routers.whiteroom-https.service: whiteroom-svc
+      traefik.http.services.whiteroom-svc.loadbalancer.server.url: http://127.0.0.1:8289

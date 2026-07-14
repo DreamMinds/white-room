@@ -1,0 +1,10 @@
+# Vorlage für die Basic-Auth-Zugangsdaten.
+# Auf dem Server nach "docker-compose.override.yml" kopieren und ausfüllen.
+# Diese Datei (die .example) darf ins Repo; die echte override.yml ist gitignored.
+#
+# Neuen Hash erzeugen:  htpasswd -nbB benutzer passwort
+# ACHTUNG: jedes '$' im Hash muss als '$$' verdoppelt werden (Compose-Escaping).
+services:
+  whiteroom-site:
+    labels:
+      traefik.http.middlewares.whiteroom-auth.basicauth.users: benutzer:$$apr1$$XXXX$$XXXXXXXXXXXXXXXXXXXXXX
