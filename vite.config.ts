@@ -12,9 +12,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
+        id: '/',
         name: 'White Room 2.0 System',
         short_name: 'WR System',
         description: 'Gamifiziertes Trainingssystem — XP, Stats, Quests, Strafen.',
+        start_url: '/',
+        scope: '/',
         theme_color: '#050a14',
         background_color: '#050a14',
         display: 'standalone',

@@ -1,10 +1,12 @@
-# Vorlage für die Basic-Auth-Zugangsdaten.
+# Vorlage für die Server-Secrets.
 # Auf dem Server nach "docker-compose.override.yml" kopieren und ausfüllen.
 # Diese Datei (die .example) darf ins Repo; die echte override.yml ist gitignored.
 #
-# Neuen Hash erzeugen:  htpasswd -nbB benutzer passwort
-# ACHTUNG: jedes '$' im Hash muss als '$$' verdoppelt werden (Compose-Escaping).
+# Seit die App eine native TWA ist, wurde die Traefik-Basic-Auth entfernt. Der
+# Zugriff auf /api/* schützt jetzt SYNC_TOKEN (Bearer-Token, siehe sync/server.cjs).
+# Der Token ist zugleich das Login-Passwort im App-Screen (AuthGate).
+# Starken Token erzeugen z. B. mit:  openssl rand -base64 24
 services:
-  whiteroom-site:
-    labels:
-      traefik.http.middlewares.whiteroom-auth.basicauth.users: benutzer:$$apr1$$XXXX$$XXXXXXXXXXXXXXXXXXXXXX
+  whiteroom-sync:
+    environment:
+      SYNC_TOKEN: "hier-einen-langen-zufaelligen-token-eintragen"

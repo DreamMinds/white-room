@@ -30,6 +30,9 @@ body {
   color: #dbeafe;
   font-family: var(--font-display);
   -webkit-tap-highlight-color: transparent;
+  /* Pull-to-Refresh abschalten: muss auf dem Root-Scroller (html) stehen,
+     vom body allein propagiert overscroll-behavior nicht auf den Viewport (TWA-App-Feel) */
+  overscroll-behavior-y: none;
 }
 
 body {

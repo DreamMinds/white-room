@@ -17,9 +17,34 @@ services:
       traefik.http.routers.whiteroom-https.entrypoints: websecure
       traefik.http.routers.whiteroom-https.rule: Host(`system.janbanick.de`)
       traefik.http.routers.whiteroom-https.tls.certresolver: letsencrypt
-      traefik.http.routers.whiteroom-https.middlewares: whiteroom-auth
-      # Basic-Auth-Zugangsdaten stehen NICHT im Repo. Sie liegen in der
-      # gitignorten docker-compose.override.yml auf dem Server (siehe
-      # docker-compose.override.yml.example als Vorlage).
+      # Keine Basic-Auth mehr: die App ist eine native TWA, die Seite ist öffentlich.
+      # Der Schutz sitzt jetzt in der API (SYNC_TOKEN, siehe sync/server.cjs).
       traefik.http.routers.whiteroom-https.service: whiteroom-svc
       traefik.http.services.whiteroom-svc.loadbalancer.server.url: http://127.0.0.1:8289
+
+  # Sync-Backend: speichert den Spielstand serverseitig, damit Handy & PC dieselben
+  # Daten sehen. /api/* wird von Traefik (höhere Priorität) hierher geroutet;
+  # Auth per SYNC_TOKEN im Dienst. Last-Write-Wins (siehe sync/server.cjs).
+  whiteroom-sync:
+    image: node:20-alpine
+    restart: always
+    command: ["node", "/app/server.cjs"]
+    environment:
+      PORT: "8080"
+      DATA_DIR: /data
+    volumes:
+      - ./sync/server.cjs:/app/server.cjs:ro
+      - whiteroom-sync-data:/data
+    ports:
+      - 127.0.0.1:8290:8080
+    labels:
+      traefik.enable: true
+      traefik.http.routers.whiteroom-api.entrypoints: websecure
+      traefik.http.routers.whiteroom-api.rule: Host(`system.janbanick.de`) && PathPrefix(`/api`)
+      traefik.http.routers.whiteroom-api.priority: "100"
+      traefik.http.routers.whiteroom-api.tls.certresolver: letsencrypt
+      traefik.http.routers.whiteroom-api.service: whiteroom-api-svc
+      traefik.http.services.whiteroom-api-svc.loadbalancer.server.url: http://127.0.0.1:8290
+
+volumes:
+  whiteroom-sync-data:
