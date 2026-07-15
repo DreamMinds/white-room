@@ -11,6 +11,25 @@ import { StatusScreen } from './screens/Status'
 import { SystemScreen } from './screens/SystemScreen'
 import { useSystemStore } from './store/useSystemStore'
 
+/**
+ * Zeigt die Abend-Warnung. Auf Android (Chrome/TWA/PWA) wirft der `Notification`-Konstruktor
+ * `TypeError: Illegal constructor` — dort MUSS die Notification über die ServiceWorker-Registration
+ * laufen. Alles in try/catch, damit ein fehlgeschlagener Versuch nie die App abstürzen lässt.
+ */
+async function showSystemWarning(body: string) {
+  const title = '⚠ [SYSTEM-WARNUNG]'
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, { body })
+      return
+    }
+    new Notification(title, { body }) // Desktop-Fallback
+  } catch {
+    /* Notification nicht verfügbar (Android-Konstruktor etc.) — still ignorieren */
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('status')
   const rollover = useSystemStore((s) => s.rollover)
@@ -50,9 +69,7 @@ export default function App() {
         .quests.filter((q) => q.kind === 'daily' && q.day === today && q.required && q.status === 'open')
       if (msLeft <= settings.warnHoursBefore * 3600000 && openRequired.length > 0 && Notification.permission === 'granted') {
         notifiedDay.current = today
-        new Notification('⚠ [SYSTEM-WARNUNG]', {
-          body: `${openRequired.length} Pflicht-Quest(s) offen. Zeit läuft ab — Sanktion droht.`,
-        })
+        showSystemWarning(`${openRequired.length} Pflicht-Quest(s) offen. Zeit läuft ab — Sanktion droht.`)
       }
     }
     check()
