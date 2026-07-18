@@ -68,7 +68,18 @@ export const useSystemStore = create<SystemStore>()(
     })),
     {
       name: 'wr-system-v1',
-      version: 1,
+      version: 2,
+      // v1→v2: Rang-Boden eingeführt. peakXp pro Stat backfillen (= aktuelle XP), damit der
+      // heute erreichte Rang sofort als Boden geschützt ist.
+      migrate: (persisted, version) => {
+        const s = persisted as WRState
+        if (version < 2 && s?.stats) {
+          for (const stat of Object.values(s.stats)) {
+            stat.peakXp = Math.max(stat.peakXp ?? 0, stat.xp ?? 0)
+          }
+        }
+        return s as SystemStore
+      },
       partialize: (s) => {
         // transiente UI-Events nicht persistieren
         const { events: _events, ...rest } = s

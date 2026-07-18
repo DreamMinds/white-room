@@ -4,6 +4,7 @@ import { EventLayer } from './components/EventLayer'
 import { JokerDialog } from './components/JokerDialog'
 import { PenaltyOverlay } from './components/PenaltyOverlay'
 import { todayKey } from './lib/dates'
+import { subscribePush } from './lib/push'
 import { CodexScreen } from './screens/Codex'
 import { JournalScreen } from './screens/Journal'
 import { QuestsScreen } from './screens/Quests'
@@ -53,6 +54,14 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+
+  // Push-Abo beim Start auffrischen, falls Notifications aktiv sind — so überlebt die
+  // Subscription SW-Updates und wird auch für Nutzer registriert, die vorher zugestimmt hatten.
+  useEffect(() => {
+    if (settings.notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+      void subscribePush()
+    }
+  }, [settings.notificationsEnabled])
 
   // Abend-Warnung als Browser-Notification (einmal pro Tag, solange App offen)
   useEffect(() => {

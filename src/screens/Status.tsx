@@ -95,10 +95,26 @@ export function StatusScreen() {
             )
           })}
         </div>
-        <p className="mt-3 text-[11px] italic leading-relaxed text-dim">
-          Stats steigen nur durch echte Arbeit — und fallen, wenn du nichts tust. Energie, Fokus und
-          Willenskraft schwanken täglich und werden hier bewusst nicht getrackt.
-        </p>
+        <div className="mt-3 text-[11px] leading-relaxed text-dim">
+          <p>
+            Dein Körper und Geist sind dein <strong className="font-semibold text-slate-100">Charakter</strong>.
+            Deine fundamentalen Stats sind:
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            <li>
+              <strong className="font-semibold text-slate-100">Energie (Ausdauer):</strong> Gesteuert durch
+              Schlaf und Ernährung.
+            </li>
+            <li>
+              <strong className="font-semibold text-slate-100">Fokus/Konzentration (Mana):</strong> Gesteuert
+              durch Pausen, Bewegung und dein Umfeld.
+            </li>
+            <li>
+              <strong className="font-semibold text-slate-100">Mentale Gesundheit (Willenskraft):</strong>{' '}
+              Gesteuert durch Stressmanagement und soziale Kontakte.
+            </li>
+          </ul>
+        </div>
       </SystemWindow>
     </div>
   )

@@ -17,7 +17,7 @@ import {
   weekKey,
   weekdayOf,
 } from '../lib/dates'
-import { STAT_IDS, STAT_META, decayForInactiveDays, levelFor, rankFor } from './stats'
+import { STAT_IDS, STAT_META, decayForInactiveDays, floorXpFor, levelFor, rankFor } from './stats'
 import type {
   JournalEntry,
   PendingDay,
@@ -30,6 +30,8 @@ import type { WRState } from '../store/state'
 export const JOKERS_PER_MONTH = 3
 export const MIN_MODE_FACTOR = 0.25
 export const PENALTY_FACTOR = 0.5
+/** Verfall von Weekly/Boss ist milder: die Belohnungen (und damit der Abzug) sind ohnehin viel größer. */
+export const WEEKLY_PENALTY_FACTOR = 0.25
 
 // ---------- Events ----------
 
@@ -57,6 +59,7 @@ export function awardXp(
     const stat = state.stats[statId]
     const rankBefore = rankFor(stat.xp)
     stat.xp += gain
+    stat.peakXp = Math.max(stat.peakXp ?? 0, stat.xp)
     if (daysBetween(stat.lastActivity, day) > 0) stat.lastActivity = day
     const rankAfter = rankFor(stat.xp)
     if (rankAfter !== rankBefore) {
@@ -75,7 +78,8 @@ export function awardXp(
 
 function loseXp(state: WRState, losses: Partial<Record<StatId, number>>) {
   for (const [statId, amount] of Object.entries(losses) as Array<[StatId, number]>) {
-    state.stats[statId].xp = Math.max(0, state.stats[statId].xp - amount)
+    const stat = state.stats[statId]
+    stat.xp = Math.max(floorXpFor(stat.peakXp ?? 0), stat.xp - amount)
   }
 }
 
@@ -208,9 +212,10 @@ export function processRollover(state: WRState, now: Date = new Date()) {
   for (const q of state.quests) {
     if ((q.kind === 'weekly' || q.kind === 'boss' || q.kind === 'penalty') && q.status === 'open' && daysBetween(q.dueDay, today) > 0) {
       q.status = 'failed'
+      const factor = q.kind === 'penalty' ? PENALTY_FACTOR : WEEKLY_PENALTY_FACTOR
       const losses: Partial<Record<StatId, number>> = {}
       for (const [s, v] of Object.entries(q.rewards) as Array<[StatId, number]>) {
-        losses[s] = Math.round(v * PENALTY_FACTOR)
+        losses[s] = Math.round(v * factor)
       }
       loseXp(state, losses)
       pushEvent(state, {
@@ -231,7 +236,7 @@ export function processRollover(state: WRState, now: Date = new Date()) {
         const inactive = daysBetween(stat.lastActivity, addDays(state.lastProcessedDay, i))
         loss += decayForInactiveDays(inactive)
       }
-      if (loss > 0) stat.xp = Math.max(0, stat.xp - loss)
+      if (loss > 0) stat.xp = Math.max(floorXpFor(stat.peakXp ?? 0), stat.xp - loss)
     }
   }
 

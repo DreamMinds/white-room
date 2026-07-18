@@ -17,6 +17,8 @@ services:
       traefik.http.routers.whiteroom-https.entrypoints: websecure
       traefik.http.routers.whiteroom-https.rule: Host(`system.janbanick.de`)
       traefik.http.routers.whiteroom-https.tls.certresolver: letsencrypt
+      traefik.http.routers.whiteroom-https.middlewares: whiteroom-noindex
+      traefik.http.middlewares.whiteroom-noindex.headers.customresponseheaders.X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet"
       # Keine Basic-Auth mehr: die App ist eine native TWA, die Seite ist öffentlich.
       # Der Schutz sitzt jetzt in der API (SYNC_TOKEN, siehe sync/server.cjs).
       traefik.http.routers.whiteroom-https.service: whiteroom-svc
@@ -32,6 +34,10 @@ services:
     environment:
       PORT: "8080"
       DATA_DIR: /data
+      # Muss zur lokalen Zeit des Nutzers passen: quest.day & Push-Stunde rechnen in Lokalzeit.
+      TZ: "Europe/Berlin"
+      VAPID_SUBJECT: "mailto:admin@janbanick.de"
+      # SYNC_TOKEN, VAPID_PUBLIC, VAPID_PRIVATE (und optional PUSH_HOUR) via override, s. .example.
     volumes:
       - ./sync/server.cjs:/app/server.cjs:ro
       - whiteroom-sync-data:/data
@@ -43,6 +49,8 @@ services:
       traefik.http.routers.whiteroom-api.rule: Host(`system.janbanick.de`) && PathPrefix(`/api`)
       traefik.http.routers.whiteroom-api.priority: "100"
       traefik.http.routers.whiteroom-api.tls.certresolver: letsencrypt
+      traefik.http.routers.whiteroom-api.middlewares: whiteroom-api-noindex
+      traefik.http.middlewares.whiteroom-api-noindex.headers.customresponseheaders.X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet"
       traefik.http.routers.whiteroom-api.service: whiteroom-api-svc
       traefik.http.services.whiteroom-api-svc.loadbalancer.server.url: http://127.0.0.1:8290
 

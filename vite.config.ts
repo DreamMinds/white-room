@@ -30,6 +30,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Push-/notificationclick-Handler in den generierten SW einziehen (generateSW bleibt).
+        importScripts: ['/push-sw.js'],
       },
     }),
   ],

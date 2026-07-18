@@ -13,6 +13,8 @@ export interface StatState {
   xp: number
   /** letzter Tag (YYYY-MM-DD), an dem der Stat XP bekommen hat — Basis für Decay */
   lastActivity: string
+  /** höchste je erreichte XP — bestimmt den Rang-Boden (Ratchet), s. floorXpFor */
+  peakXp: number
 }
 
 export type QuestKind = 'daily' | 'weekly' | 'penalty' | 'hidden' | 'boss'

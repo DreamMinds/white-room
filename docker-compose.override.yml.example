@@ -6,7 +6,16 @@
 # Zugriff auf /api/* schützt jetzt SYNC_TOKEN (Bearer-Token, siehe sync/server.cjs).
 # Der Token ist zugleich das Login-Passwort im App-Screen (AuthGate).
 # Starken Token erzeugen z. B. mit:  openssl rand -base64 24
+#
+# Web Push (Abend-Warnung bei geschlossener App): VAPID-Schlüsselpaar einmalig erzeugen mit
+#   node sync/gen-vapid.cjs
+# VAPID_PUBLIC zusätzlich als VITE_VAPID_PUBLIC beim Frontend-Build setzen (sonst abonniert der
+# Client nicht). VAPID_PRIVATE ist geheim und gehört nur hierher.
 services:
   whiteroom-sync:
     environment:
       SYNC_TOKEN: "hier-einen-langen-zufaelligen-token-eintragen"
+      VAPID_PUBLIC: "hier-den-oeffentlichen-vapid-schluessel-eintragen"
+      VAPID_PRIVATE: '{"kty":"EC","crv":"P-256","x":"...","y":"...","d":"..."}'
+      # Optional: feste Push-Stunde erzwingen (sonst 24 - warnHoursBefore, i. d. R. ~21).
+      # PUSH_HOUR: "21"

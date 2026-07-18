@@ -5,6 +5,7 @@ import { exportBackup } from '../domain/exporter'
 import { STAT_META } from '../domain/stats'
 import type { StatId } from '../domain/types'
 import { formatDateTime, formatDay } from '../lib/dates'
+import { subscribePush } from '../lib/push'
 import type { WRState } from '../store/state'
 import { useSystemStore } from '../store/useSystemStore'
 
@@ -32,7 +33,10 @@ export function SystemScreen() {
   async function requestNotifications() {
     if (!('Notification' in window)) return
     const perm = await Notification.requestPermission()
-    updateSettings({ notificationsEnabled: perm === 'granted' })
+    const granted = perm === 'granted'
+    updateSettings({ notificationsEnabled: granted })
+    // Server-Push abonnieren, damit die Warnung auch bei geschlossener App ankommt.
+    if (granted) await subscribePush()
   }
 
   function onImport(file: File) {

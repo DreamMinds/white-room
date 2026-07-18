@@ -35,7 +35,7 @@ export interface WRState {
 export function initialState(): WRState {
   const today = todayKey()
   const stats = {} as Record<StatId, StatState>
-  for (const s of STAT_IDS) stats[s] = { xp: 0, lastActivity: today }
+  for (const s of STAT_IDS) stats[s] = { xp: 0, lastActivity: today, peakXp: 0 }
   return {
     stats,
     quests: [],

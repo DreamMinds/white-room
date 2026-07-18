@@ -106,6 +106,17 @@ export function titleFor(level: number): string {
   return t
 }
 
+/**
+ * Rang-Boden (Ratchet): Der einmal erreichte Rang ist geschützt — XP-Verlust (Decay/Strafe) kann
+ * nie unter dessen Schwelle fallen. Einzige Ausnahme: S-Rang. Da ab S keine XP mehr verdient werden,
+ * würde ein permanenter S-Boden jeden Anreiz zum Aktivbleiben nehmen — deshalb kann man von S einen
+ * Rang auf A zurückfallen. Boden = Schwelle des Peak-Rangs, außer Peak = S → Schwelle von A.
+ */
+export function floorXpFor(peakXp: number): number {
+  const peak = rankFor(peakXp)
+  return RANK_THRESHOLDS[peak === 'S' ? 'A' : peak]
+}
+
 /** Decay: ab Tag 4 ohne Aktivität verliert ein Stat XP, täglich steigend (10, 20, 30 … max 60). */
 export function decayForInactiveDays(daysInactive: number): number {
   if (daysInactive <= 3) return 0
