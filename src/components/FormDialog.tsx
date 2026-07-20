@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
+  BENCHMARK_QUESTIONS,
+  CAMPAIGN_QUESTIONS,
   MODEL_LIBRARY,
   POSTGAME_QUESTIONS,
   PSYCH_EFFECTS,
@@ -7,6 +9,7 @@ import {
   REDTEAM_QUESTIONS,
   SPARRING_QUESTIONS,
   UNCOMFORTABLE_QUESTIONS,
+  WARMTH_QUESTIONS,
   WEEKLYREVIEW_QUESTIONS,
 } from '../data/seed'
 import type { FormKind, JournalEntry, JournalKind, QuestInstance } from '../domain/types'
@@ -25,7 +28,12 @@ const FORM_CONFIG: Record<
   sparring: { questions: SPARRING_QUESTIONS, journalKind: 'sparring', titlePrefix: 'Sparring' },
   psych: { questions: PSYCH_QUESTIONS, journalKind: 'psych', titlePrefix: 'Psych-Effekt' },
   uncomfortable: { questions: UNCOMFORTABLE_QUESTIONS, journalKind: 'uncomfortable', titlePrefix: 'Unangenehme Situation' },
+  warmth: { questions: WARMTH_QUESTIONS, journalKind: 'warmth', titlePrefix: 'Vertrauens-Invest' },
+  benchmark: { questions: BENCHMARK_QUESTIONS, journalKind: 'benchmark', titlePrefix: 'Externes Scoreboard' },
+  campaign: { questions: CAMPAIGN_QUESTIONS, journalKind: 'campaign', titlePrefix: 'Kampagne' },
 }
+
+const MIN_LABEL = 'Kalibrierung heute: Wie sicher warst du (0–100 %) + 1 Satz'
 
 /** Formular-Quests: Antworten werden Proof UND Journal-Eintrag zugleich. */
 export function FormDialog({ quest, onClose }: { quest: QuestInstance; onClose: () => void }) {
@@ -41,13 +49,32 @@ export function FormDialog({ quest, onClose }: { quest: QuestInstance; onClose: 
   const [what, setWhat] = useState('')
   const [why, setWhy] = useState('')
   const [p, setP] = useState(65)
+  const [minMode, setMinMode] = useState(false)
+  const [minText, setMinText] = useState('')
 
   const totalLen = answers.join('').trim().length
-  const valid = isForecast ? what.trim().length >= 10 && why.trim().length >= 10 : totalLen >= 40
+  const valid = minMode
+    ? minText.trim().length >= 5
+    : isForecast
+      ? what.trim().length >= 10 && why.trim().length >= 10
+      : totalLen >= 40
 
   function submit() {
     const now = new Date().toISOString()
     let entry: JournalEntry
+    if (minMode) {
+      entry = {
+        id: uid('j'),
+        createdAt: now,
+        kind: cfg!.journalKind,
+        title: `${cfg!.titlePrefix} (Minimum) — ${minText.trim().slice(0, 60)}`,
+        fields: [{ label: MIN_LABEL, value: minText.trim() }],
+        questId: quest.id,
+      }
+      complete(quest.id, { min: true, proofText: 'Minimal-Eintrag → Journal', journalEntry: entry })
+      onClose()
+      return
+    }
     if (isForecast) {
       entry = {
         id: uid('j'),
@@ -116,7 +143,24 @@ export function FormDialog({ quest, onClose }: { quest: QuestInstance; onClose: 
         </p>
       )}
 
-      {isForecast ? (
+      {!isForecast && quest.minAllowed && (
+        <button
+          type="button"
+          onClick={() => setMinMode(!minMode)}
+          className="mb-3 block w-full rounded border border-gold/40 bg-gold/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-gold hover:bg-gold/15"
+        >
+          {minMode ? '← Zurück zum vollen Formular' : 'Minimal-Eintrag (25 % XP, Streak bleibt)'}
+        </button>
+      )}
+
+      {minMode ? (
+        <>
+          <p className="mb-2 text-xs text-gold">„Lieber 5 Min als gar nicht." — 1 Zahl + 1 Satz, gültiger Tag.</p>
+          <Field label={MIN_LABEL}>
+            <textarea value={minText} onChange={(e) => setMinText(e.target.value)} rows={2} className={inputCls} />
+          </Field>
+        </>
+      ) : isForecast ? (
         <>
           <Field label={'Was wird passieren? (Move + Response: „Wenn ich X tue, passiert Y bis Z“)'}>
             <textarea value={what} onChange={(e) => setWhat(e.target.value)} rows={2} className={inputCls} />
@@ -173,7 +217,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-/** Tally-Dialog für die Strichlisten-Quest (Modell der Woche). */
+/** Tally-Dialog für Strichlisten-Quests (Modell der Woche, unangenehme Situationen). */
 export function TallyDialog({ quest, onClose }: { quest: QuestInstance; onClose: () => void }) {
   const tally = useSystemStore((s) => s.tally)
   const [note, setNote] = useState('')
@@ -183,9 +227,11 @@ export function TallyDialog({ quest, onClose }: { quest: QuestInstance; onClose:
   return (
     <Modal title={quest.title} onClose={onClose}>
       <p className="mb-2 text-xs text-dim">{quest.desc}</p>
-      <p className="mb-3 text-xs text-dim">
-        Modell-Bibliothek: {MODEL_LIBRARY.map((m) => m.name).join(' · ')}
-      </p>
+      {quest.formKind === 'model' && (
+        <p className="mb-3 text-xs text-dim">
+          Modell-Bibliothek: {MODEL_LIBRARY.map((m) => m.name).join(' · ')}
+        </p>
+      )}
       <div className="mb-3 flex items-center gap-2">
         {Array.from({ length: target }).map((_, i) => (
           <span
@@ -200,7 +246,13 @@ export function TallyDialog({ quest, onClose }: { quest: QuestInstance; onClose:
           {quest.proofText}
         </pre>
       )}
-      <Field label="Anwendung in einem Satz (Modell + Situation)">
+      <Field
+        label={
+          quest.formKind === 'uncomfortable'
+            ? 'Situation in einem Satz (Was getan? Outcome?)'
+            : 'Anwendung in einem Satz (Modell + Situation)'
+        }
+      >
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className={inputCls} />
       </Field>
       <div className="flex justify-end gap-2">

@@ -12,6 +12,24 @@ import {
   type CompleteOptions,
 } from '../domain/engine'
 import { initialState, type WRState } from './state'
+import { DEFAULT_TRAINING_PLAN } from '../data/seed'
+
+/**
+ * v1→v2: Rang-Boden eingeführt — peakXp pro Stat backfillen (= aktuelle XP).
+ * v2→v3: Trainingsplan-Rework (5+1+1 mit Ruhetag) — die bei Erststart eingefrorene Kopie in
+ * settings.trainingPlan wird durch den neuen DEFAULT_TRAINING_PLAN ersetzt (keine Custom-UI → sicher).
+ */
+export function migratePersisted(s: WRState, version: number): WRState {
+  if (version < 2 && s?.stats) {
+    for (const stat of Object.values(s.stats)) {
+      stat.peakXp = Math.max(stat.peakXp ?? 0, stat.xp ?? 0)
+    }
+  }
+  if (version < 3 && s?.settings) {
+    s.settings.trainingPlan = DEFAULT_TRAINING_PLAN
+  }
+  return s
+}
 
 interface Actions {
   rollover: () => void
@@ -68,18 +86,8 @@ export const useSystemStore = create<SystemStore>()(
     })),
     {
       name: 'wr-system-v1',
-      version: 2,
-      // v1→v2: Rang-Boden eingeführt. peakXp pro Stat backfillen (= aktuelle XP), damit der
-      // heute erreichte Rang sofort als Boden geschützt ist.
-      migrate: (persisted, version) => {
-        const s = persisted as WRState
-        if (version < 2 && s?.stats) {
-          for (const stat of Object.values(s.stats)) {
-            stat.peakXp = Math.max(stat.peakXp ?? 0, stat.xp ?? 0)
-          }
-        }
-        return s as SystemStore
-      },
+      version: 3,
+      migrate: (persisted, version) => migratePersisted(persisted as WRState, version) as SystemStore,
       partialize: (s) => {
         // transiente UI-Events nicht persistieren
         const { events: _events, ...rest } = s

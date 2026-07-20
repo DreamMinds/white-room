@@ -3,7 +3,7 @@ import { CountdownBanner } from '../components/CountdownBanner'
 import { QuestCard } from '../components/QuestCard'
 import { SystemWindow } from '../components/SystemWindow'
 import { HIDDEN_QUESTS } from '../data/seed'
-import { formatDay, todayKey, weekKey } from '../lib/dates'
+import { formatDay, monthKey, quarterKey, todayKey, weekKey } from '../lib/dates'
 import { useSystemStore } from '../store/useSystemStore'
 
 type Tab = 'today' | 'week' | 'special'
@@ -19,11 +19,13 @@ export function QuestsScreen() {
 
   const daily = quests.filter((q) => (q.kind === 'daily' || q.kind === 'penalty') && q.day === today)
   const weekly = quests.filter((q) => q.kind === 'weekly' && q.period === week)
+  const monthly = quests.filter((q) => q.kind === 'monthly' && q.period === monthKey(today))
+  const campaign = quests.filter((q) => q.kind === 'campaign' && q.period === quarterKey(today))
   const boss = quests.filter((q) => q.kind === 'boss' && q.status === 'open')
 
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: 'today', label: `Heute (${daily.filter((q) => q.status === 'open').length})` },
-    { id: 'week', label: `Woche (${weekly.filter((q) => q.status === 'open').length})` },
+    { id: 'week', label: `Woche (${[...weekly, ...monthly].filter((q) => q.status === 'open').length})` },
     { id: 'special', label: '???' },
   ]
 
@@ -70,11 +72,22 @@ export function QuestsScreen() {
           {weekly.map((q) => (
             <QuestCard key={q.id} quest={q} />
           ))}
+          {monthly.length > 0 && (
+            <>
+              <p className="pt-2 text-xs uppercase tracking-widest text-dim">Monat — Deadline Monatsende</p>
+              {monthly.map((q) => (
+                <QuestCard key={q.id} quest={q} />
+              ))}
+            </>
+          )}
         </div>
       )}
 
       {tab === 'special' && (
         <div className="space-y-3">
+          {campaign.map((q) => (
+            <QuestCard key={q.id} quest={q} />
+          ))}
           {boss.map((q) => (
             <QuestCard key={q.id} quest={q} />
           ))}

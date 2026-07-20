@@ -15,6 +15,9 @@ export const KIND_LABELS: Record<JournalKind, string> = {
   model: 'Modell der Woche',
   psych: 'Psychologie-Effekt',
   uncomfortable: 'Unangenehme Situation',
+  warmth: 'Vertrauens-Invest',
+  benchmark: 'Externes Scoreboard',
+  campaign: 'Kampagne',
   lore: 'System-Log',
 }
 

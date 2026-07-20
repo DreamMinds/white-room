@@ -1,10 +1,10 @@
 import type { FormKind, StatId, TrainingDay } from '../domain/types'
 
-/** Wochenplan aus dem Trainingsdokument. Index 0=Mo … 6=So */
+/** Wochenplan: 5 Einheiten + 1 leichter Tag + 1 voller Ruhetag. Index 0=Mo … 6=So */
 export const DEFAULT_TRAINING_PLAN: TrainingDay[] = [
   {
-    title: 'Krav Maga + Ausdauerlauf',
-    desc: 'Sparring/Techniktraining (Krav Maga) + Laufen in normalem Tempo.',
+    title: 'Krav Maga + Zone-2-Lauf',
+    desc: 'Sparring/Techniktraining (Krav Maga) + Lauf explizit locker (Zone 2, Unterhaltungs-Tempo).',
     rewards: { strength: 30, agility: 30 },
   },
   {
@@ -14,13 +14,18 @@ export const DEFAULT_TRAINING_PLAN: TrainingDay[] = [
   },
   {
     title: 'Krav Maga + Intervalle',
-    desc: 'Sparring/Techniktraining (Krav Maga) + Tempoläufe/Intervalltraining.',
+    desc: 'Sparring/Techniktraining (Krav Maga) + Tempoläufe/Intervalltraining. Der harte Tag der Woche.',
     rewards: { strength: 25, agility: 35 },
   },
   {
-    title: 'Plyometrics + Kraftsport',
-    desc: 'Explosivkraft (Plyometrics) + Calisthenics.',
-    rewards: { agility: 30, strength: 30 },
+    title: 'Ruhetag / Recovery',
+    desc: 'Kein Training. Schlaf-Fokus, optional 15 Min lockere Mobilität. Wenn Recovery bricht, bricht Genialität als erstes — dieser Tag ist Teil des Systems, nicht seine Abwesenheit.',
+    rewards: { vitality: 30 },
+  },
+  {
+    title: 'Kraftsport (Calisthenics) + Plyo-Finish',
+    desc: 'Calisthenics-Einheit: Grundübungen + Skill-Arbeit, danach kurzes Plyometrics-Finish (Explosivkraft).',
+    rewards: { strength: 35, agility: 25 },
   },
   {
     title: 'Krav Maga + Longrun',
@@ -28,14 +33,9 @@ export const DEFAULT_TRAINING_PLAN: TrainingDay[] = [
     rewards: { strength: 25, agility: 35 },
   },
   {
-    title: 'Kraftsport (Calisthenics)',
-    desc: 'Calisthenics-Einheit: Grundübungen + Skill-Arbeit.',
-    rewards: { strength: 40, vitality: 20 },
-  },
-  {
-    title: 'Mobilität + Plyometrics',
-    desc: 'Beweglichkeit, Dehnen, Haltung + Explosivkraft.',
-    rewards: { vitality: 35, agility: 25 },
+    title: 'Mobilität',
+    desc: 'Beweglichkeit, Dehnen, Haltung — echter leichter Tag, kein Explosivtraining.',
+    rewards: { vitality: 35, agility: 15 },
   },
 ]
 
@@ -61,10 +61,11 @@ export const DAILY_FORECAST: DailyTemplate = {
 export const DAILY_POSTGAME: DailyTemplate = {
   templateId: 'daily_postgame',
   title: 'Post-Game-Reflexion',
-  desc: '10 Minuten. Eine relevante Szene des Tages durch die 6 Kernfragen ziehen, danach 30-Sekunden-Rehearsal.',
+  desc: '10 Minuten. Eine relevante Szene des Tages durch die 6 Kernfragen ziehen, danach 30-Sekunden-Rehearsal. Kein Kopf mehr? Minimal-Eintrag (1 Zahl + 1 Satz) zählt als gültiger Tag.',
   rewards: { intelligence: 15, perception: 10 },
   proof: 'form',
   formKind: 'postgame',
+  minAllowed: true,
 }
 
 export interface WeeklyTemplate {
@@ -81,7 +82,7 @@ export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
   {
     templateId: 'weekly_model',
     title: 'Modell der Woche — 5× anwenden',
-    desc: 'Ein mentales Modell aus der Bibliothek wählen und 5× bewusst im Alltag anwenden. Pro Anwendung ein Strich + 1 Satz.',
+    desc: 'Ein mentales Modell aus der Bibliothek wählen und 5× bewusst im Alltag anwenden. Pro Anwendung ein Strich + 1 Satz. Anwendung 5 = Pflicht-Falsifikation: 1 Fall, wo das Modell NICHT passt oder irreführt.',
     rewards: { intelligence: 60, strategy: 40 },
     proof: 'counter',
     formKind: 'model',
@@ -98,18 +99,27 @@ export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
   {
     templateId: 'weekly_sparring',
     title: 'Sparring (Format A–D)',
-    desc: 'Mind. 1 Sparring: A) Rollenspiel mit Menschen, B) Spiel mit verdeckter Info, C) Red-Team-Duell, D) KI-Simulation im Claude-Projekt. Pflicht: Post-Game-Review.',
+    desc: 'Mind. 1 Sparring: A) Rollenspiel mit Menschen, B) Spiel mit verdeckter Info, C) Red-Team-Duell, D) KI-Simulation im Claude-Projekt. Pflicht: Post-Game-Review. Format D (KI) max. 2×/Monat — A/B bevorzugen.',
     rewards: { strategy: 50, influence: 30 },
     proof: 'form',
     formKind: 'sparring',
   },
   {
     templateId: 'weekly_uncomfortable',
-    title: 'Bewusst unangenehme Situation',
-    desc: 'Grenze setzen · Nachfrage statt Erklärung · „Ich entscheide das bis morgen" · „Was soll dafür liegen bleiben?" — Abruf unter mildem Stress.',
+    title: 'Bewusst unangenehme Situationen (2×)',
+    desc: '2–3× pro Woche: Grenze setzen · Nachfrage statt Erklärung · „Ich entscheide das bis morgen" · „Was soll dafür liegen bleiben?" — Abruf unter mildem Stress. Pro Situation ein Strich + 1 Satz (Was getan? Körperreaktion? Outcome/If-Then?).',
     rewards: { strength: 40, influence: 20 },
-    proof: 'form',
+    proof: 'counter',
     formKind: 'uncomfortable',
+    counterTarget: 2,
+  },
+  {
+    templateId: 'weekly_warmth',
+    title: 'Vertrauens-Invest (1×)',
+    desc: '1 gezielter Invest ohne Agenda: echter Gefallen, Warm-Intro, ehrliches Interesse. Kompetenz ohne Wärme erzeugt Neid — dieser Rep schließt die Flanke.',
+    rewards: { influence: 40, vitality: 20 },
+    proof: 'form',
+    formKind: 'warmth',
   },
   {
     templateId: 'weekly_redteam',
@@ -129,6 +139,35 @@ export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
   },
 ]
 
+export interface MonthlyTemplate {
+  templateId: string
+  title: string
+  desc: string
+  rewards: Partial<Record<StatId, number>>
+  proof: 'form'
+  formKind: FormKind
+}
+
+export const MONTHLY_TEMPLATES: MonthlyTemplate[] = [
+  {
+    templateId: 'monthly_benchmark',
+    title: 'Externes Scoreboard',
+    desc: 'Mind. 1 gewertetes Event mit objektivem Ergebnis — Selbstbenotung zählt nicht. Rotation empfohlen: Forecasting (Metaculus) / Schach- oder Poker-Rating / freie Wahl.',
+    rewards: { strategy: 60, perception: 40 },
+    proof: 'form',
+    formKind: 'benchmark',
+  },
+]
+
+export const QUARTERLY_CAMPAIGN: MonthlyTemplate = {
+  templateId: 'quarterly_campaign',
+  title: 'Kampagne des Quartals definieren',
+  desc: 'Der Quartals-Arc: Arena & Ziel, Gegner/Hindernisse + deren Anreize, messbare Win-Condition, die nächsten 3 Züge, Stop-Loss. Ohne Kampagne ist das Training Gym ohne Wettkampf.',
+  rewards: { strategy: 50, intelligence: 30 },
+  proof: 'form',
+  formKind: 'campaign',
+}
+
 export const BOSS_TEMPLATE = {
   templateId: 'boss_exam',
   title: 'BOSS: White Room Exam Day',
@@ -136,22 +175,26 @@ export const BOSS_TEMPLATE = {
   rewards: { strategy: 120, intelligence: 80, strength: 50, perception: 50 } as Partial<Record<StatId, number>>,
 }
 
-export const PENALTY_QUESTS: Array<{ title: string; desc: string }> = [
+export const PENALTY_QUESTS: Array<{ title: string; desc: string; rewards: Partial<Record<StatId, number>> }> = [
   {
-    title: 'STRAFPROTOKOLL: 100 Burpees',
-    desc: '100 Burpees, über den Tag verteilt erlaubt. Das System vergisst nicht.',
+    title: 'STRAFPROTOKOLL: Kalt-Analyse',
+    desc: '15 Min schriftliches Post-Mortem: Warum verpasst? Welcher Trigger? Plus 1 konkreter Friction-Fix (Systeme statt Willenskraft) und 1 If-Then-Regel. Das System vergisst nicht.',
+    rewards: { intelligence: 20, perception: 10 },
   },
   {
-    title: 'STRAFPROTOKOLL: 5 km Lauf + Kältedusche',
-    desc: '5 km Lauf in beliebigem Tempo, danach 2 Minuten kalt duschen.',
+    title: 'STRAFPROTOKOLL: Dopamin-Fasten',
+    desc: '24 Stunden komplett ohne Kurzvideos und Feeds. Die Strafe kostet Komfort, nicht Recovery.',
+    rewards: { vitality: 20, intelligence: 10 },
   },
   {
-    title: 'STRAFPROTOKOLL: Doppelte Einheit',
-    desc: 'Heutiges Training in doppeltem Umfang. Wer gestern gespart hat, zahlt heute mit Zinsen.',
+    title: 'STRAFPROTOKOLL: Doppelter Abruf',
+    desc: 'Diese Woche 2 zusätzliche bewusst unangenehme Situationen. Wer gestern gespart hat, zahlt mit Exposition.',
+    rewards: { strength: 20, influence: 10 },
   },
   {
-    title: 'STRAFPROTOKOLL: 200 Squats + 100 Push-ups',
-    desc: '200 Kniebeugen und 100 Liegestütze, über den Tag verteilt erlaubt.',
+    title: 'STRAFPROTOKOLL: Komfort-Entzug',
+    desc: '2 Minuten Kältedusche + Handy bis 12:00 stumm. Unangenehm, aber recovery-neutral.',
+    rewards: { vitality: 20, strength: 10 },
   },
 ]
 
@@ -211,10 +254,10 @@ export const HIDDEN_QUESTS: HiddenQuestDef[] = [
   },
   {
     id: 'hidden_calibration',
-    hint: '??? — Deine Vorhersagen werden ausgewertet.',
+    hint: '??? — Deine Vorhersagen werden ausgewertet. Sichere Wetten zählen nicht.',
     title: 'GEHEIME QUEST ERFÜLLT: Das Auge des Orakels',
-    message: '10 Prognosen aufgelöst, Trefferquote ≥ 70 %. Deine Kalibrierung übertrifft die Basisrate.',
-    lore: 'Audio-Log #02 — »Ein Stratege redet sich nicht ein, er hätte es kommen sehen. Er schreibt es vorher auf und erträgt die Auswertung. Deine Zahlen lügen nicht mehr.«',
+    message: '≥10 Prognosen aufgelöst, Brier ≤ 0.20, davon ≥3 echte Wetten (35–70 %). Deine Kalibrierung ist echt — nicht die Flucht in sichere Prognosen.',
+    lore: 'Audio-Log #02 — »Ein Stratege redet sich nicht ein, er hätte es kommen sehen. Er schreibt es vorher auf und erträgt die Auswertung. Und er flüchtet nicht in die 95 %, wo jede Prognose gewinnt. Deine Zahlen lügen nicht mehr.«',
     reward: { xp: { perception: 120, strategy: 60 }, title: 'Orakel' },
   },
   {
@@ -398,7 +441,7 @@ export const CODEX_SECTIONS: Array<{ id: string; title: string; items: Array<{ h
       },
       {
         h: 'Wöchentliche Praxis',
-        body: '1 Modell × 5 Anwendungen · 1 Psychologie-Effekt testen · 1–2 Sparrings · 1–2 unangenehme Situationen · Red-Team 2–3× · Weekly Review sonntags (20 Min, Scoreboard → Meta-Regel → nächstes Modell → nächstes Sparring → 1 Move 2×).',
+        body: '1 Modell × 5 Anwendungen (Nr. 5 = Falsifikation) · 1 Psychologie-Effekt testen · 1–2 Sparrings (KI max. 2×/Monat) · 2–3 unangenehme Situationen · 1 Vertrauens-Invest (Wärme-Rep) · Red-Team 2–3× · Weekly Review sonntags. Monatlich: 1 externes Scoreboard (Metaculus / Schach / Poker).',
       },
       {
         h: 'OODA-Speed (Fallback)',
@@ -415,6 +458,28 @@ export const CODEX_SECTIONS: Array<{ id: string; title: string; items: Array<{ h
       {
         h: 'Anti-Overkill',
         body: 'Kein endlos komplexes Journal, keine 50 Modelle auf einmal, Manipulation nie als Standardmodus. Wenn Recovery bricht, bricht „Genialität" als erstes. Lieber 5 Min als gar nicht.',
+      },
+    ],
+  },
+  {
+    id: 'kampagne',
+    title: '06 · Kampagne & Netzwerk',
+    items: [
+      {
+        h: 'Der Quartals-Arc',
+        body: 'Training ohne Kampagne ist Gym ohne Wettkampf. Pro Quartal: Arena & Ziel · Gegner/Hindernisse + deren Anreize · messbare Win-Condition · die nächsten 3 Züge · Stop-Loss. Prognosen, Red-Teams und Sparrings docken an die laufende Kampagne an; das Weekly Review prüft den Fortschritt.',
+      },
+      {
+        h: 'Menschen-Portfolio',
+        body: '5–10 Schlüsselkontakte mit Rollen: Informant · Türöffner · Mentor · ebenbürtiger Sparringspartner. Lücken-Analyse: Welche Rolle ist unbesetzt? Pflege = 1 Vertrauens-Invest pro Woche (Wärme-Rep) — echter Gefallen, Warm-Intro, ehrliches Interesse ohne Agenda.',
+      },
+      {
+        h: 'Offensive Informationsbeschaffung',
+        body: 'Vor relevanten Gesprächen/Verhandlungen: 10-Min-Dossier statt live raten — Ziele, Constraints, Anreize, Risiken des Gegenübers. Der Vorsprung wird vor der Konfrontation aufgebaut, nicht in ihr.',
+      },
+      {
+        h: 'Wärme als Schutzschild',
+        body: 'Hohe Kompetenz + niedrige Wärme = Neid-Zone. Der wöchentliche Vertrauens-Invest ist kein Soft-Skill-Dekor, sondern schließt die teuerste Flanke des Systems.',
       },
     ],
   },
@@ -435,6 +500,7 @@ export const WEEKLYREVIEW_QUESTIONS = [
   'Nächstes Modell + Psychologie-Effekt (größter Engpass zuerst)?',
   'Nächstes Sparring-Szenario (Setting · Ziel · Nebenbedingung · Gegner-Vorteil · Win-Condition)?',
   '1 Real-Life-Move, 2 Einsätze nächste Woche?',
+  'Kampagnen-Check: Hat die Woche auf die Win-Condition eingezahlt? Nächster Zug?',
 ]
 
 export const REDTEAM_QUESTIONS = [
@@ -463,6 +529,26 @@ export const PSYCH_QUESTIONS = [
 
 export const MODEL_QUESTIONS = [
   'Welches Modell? Fasse es in einem Satz.',
-  'Die 5 Anwendungen: je 1 Satz.',
+  'Die 5 Anwendungen: je 1 Satz — Anwendung 5 ist die Pflicht-Falsifikation (wo passt das Modell NICHT oder führt in die Irre?).',
   'Was hat es sichtbar gemacht, das du sonst übersehen hättest?',
+]
+
+export const WARMTH_QUESTIONS = [
+  'Was hast du investiert (Gefallen, Warm-Intro, ehrliches Interesse — ohne Agenda)?',
+  'Wie war die Reaktion?',
+  'Was sagt es über die Beziehung — und welche Rolle spielt die Person in deinem Portfolio (Informant, Türöffner, Mentor, Sparringspartner)?',
+]
+
+export const BENCHMARK_QUESTIONS = [
+  'Welche Schiene + welches Event (Metaculus-Frage, Schach-/Poker-Partie, anderes gewertetes Format)?',
+  'Objektives Ergebnis / Score (Zahl, Rating, Auflösung — nicht dein Gefühl)?',
+  'Lektion + wann ist der nächste Eintritt?',
+]
+
+export const CAMPAIGN_QUESTIONS = [
+  'Arena & Ziel des Quartals (ein konkretes reales Spielfeld, z. B. Agentur-Aufbau)?',
+  'Gegner/Hindernisse — und deren Anreize?',
+  'Messbare Win-Condition (woran erkennst du objektiv den Sieg)?',
+  'Die nächsten 3 Züge?',
+  'Stop-Loss / Kill-Rule (wann brichst du ab oder planst neu)?',
 ]

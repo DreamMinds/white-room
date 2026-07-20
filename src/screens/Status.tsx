@@ -46,9 +46,9 @@ export function StatusScreen() {
             <p className="text-dim">
               Kalibrierung:{' '}
               <span className="font-bold text-glow2">
-                {fc.resolved ? `${Math.round(fc.accuracy * 100)} %` : '—'}
+                {fc.resolved ? `Brier ${fc.brier.toFixed(2)}` : '—'}
               </span>
-              <span className="text-xs"> ({fc.resolved} Progn.)</span>
+              <span className="text-xs"> ({fc.resolved} Progn. · {fc.realBets} echte Wetten)</span>
             </p>
           </div>
         </div>

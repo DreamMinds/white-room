@@ -30,6 +30,18 @@ export function monthKey(day: string): string {
   return day.slice(0, 7)
 }
 
+/** Letzter Tag des Monats, in dem `day` liegt. */
+export function endOfMonth(day: string): string {
+  const d = fromDayKey(day)
+  return toDayKey(new Date(d.getFullYear(), d.getMonth() + 1, 0))
+}
+
+/** Erster Tag des Quartals, in dem `day` liegt. */
+export function quarterStart(day: string): string {
+  const d = fromDayKey(day)
+  return toDayKey(new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1))
+}
+
 /** ISO-Wochen-Schlüssel, z.B. "2026-W29" */
 export function weekKey(day: string): string {
   const d = fromDayKey(day)

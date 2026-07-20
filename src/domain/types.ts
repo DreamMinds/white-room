@@ -17,7 +17,7 @@ export interface StatState {
   peakXp: number
 }
 
-export type QuestKind = 'daily' | 'weekly' | 'penalty' | 'hidden' | 'boss'
+export type QuestKind = 'daily' | 'weekly' | 'monthly' | 'campaign' | 'penalty' | 'hidden' | 'boss'
 export type ProofKind = 'photo' | 'text' | 'form' | 'counter' | 'none'
 export type FormKind =
   | 'forecast'
@@ -28,6 +28,9 @@ export type FormKind =
   | 'model'
   | 'psych'
   | 'uncomfortable'
+  | 'warmth'
+  | 'benchmark'
+  | 'campaign'
 
 export type QuestStatus = 'open' | 'done' | 'done_min' | 'failed' | 'joker'
 
@@ -70,6 +73,9 @@ export type JournalKind =
   | 'model'
   | 'psych'
   | 'uncomfortable'
+  | 'warmth'
+  | 'benchmark'
+  | 'campaign'
   | 'lore'
 
 export interface ForecastData {

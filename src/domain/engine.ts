@@ -3,14 +3,18 @@ import {
   DAILY_FORECAST,
   DAILY_POSTGAME,
   HIDDEN_QUESTS,
+  MONTHLY_TEMPLATES,
   PENALTY_QUESTS,
+  QUARTERLY_CAMPAIGN,
   WEEKLY_TEMPLATES,
 } from '../data/seed'
 import {
   addDays,
   daysBetween,
+  endOfMonth,
   monthKey,
   quarterKey,
+  quarterStart,
   sundayOf,
   todayKey,
   uid,
@@ -118,6 +122,7 @@ function makeDailyQuests(state: WRState, day: string): QuestInstance[] {
       rewards: DAILY_POSTGAME.rewards,
       proof: 'form',
       formKind: 'postgame',
+      minAllowed: DAILY_POSTGAME.minAllowed,
     },
   ]
 }
@@ -142,6 +147,48 @@ function makeWeeklyQuests(day: string): QuestInstance[] {
     status: 'open' as const,
     required: false,
   }))
+}
+
+function makeMonthlyQuests(day: string): QuestInstance[] {
+  const period = monthKey(day)
+  const dueDay = endOfMonth(day)
+  return MONTHLY_TEMPLATES.map((t) => ({
+    id: uid('q'),
+    templateId: t.templateId,
+    kind: 'monthly' as const,
+    title: t.title,
+    desc: t.desc,
+    day,
+    period,
+    dueDay,
+    rewards: t.rewards,
+    proof: t.proof,
+    formKind: t.formKind,
+    status: 'open' as const,
+    required: false,
+  }))
+}
+
+/** Kampagnen-Quest: fällig bis Tag 14 des Quartals; bei späterem Einstieg 14 Tage ab Generierung. */
+function makeCampaignQuest(day: string): QuestInstance {
+  const period = quarterKey(day)
+  const ideal = addDays(quarterStart(day), 13)
+  const dueDay = daysBetween(ideal, day) > 0 ? addDays(day, 14) : ideal
+  return {
+    id: uid('q'),
+    templateId: QUARTERLY_CAMPAIGN.templateId,
+    kind: 'campaign',
+    title: QUARTERLY_CAMPAIGN.title,
+    desc: QUARTERLY_CAMPAIGN.desc,
+    day,
+    period,
+    dueDay,
+    rewards: QUARTERLY_CAMPAIGN.rewards,
+    proof: QUARTERLY_CAMPAIGN.proof,
+    formKind: QUARTERLY_CAMPAIGN.formKind,
+    status: 'open',
+    required: false,
+  }
 }
 
 function makeBossQuest(day: string): QuestInstance {
@@ -194,6 +241,12 @@ export function processRollover(state: WRState, now: Date = new Date()) {
     if (!state.quests.some((q) => q.kind === 'weekly' && q.period === weekKey(cursor))) {
       state.quests.push(...makeWeeklyQuests(cursor))
     }
+    if (!state.quests.some((q) => q.kind === 'monthly' && q.period === monthKey(cursor))) {
+      state.quests.push(...makeMonthlyQuests(cursor))
+    }
+    if (!state.quests.some((q) => q.kind === 'campaign' && q.period === quarterKey(cursor))) {
+      state.quests.push(makeCampaignQuest(cursor))
+    }
     if (!state.quests.some((q) => q.kind === 'boss' && q.period === quarterKey(cursor))) {
       state.quests.push(makeBossQuest(cursor))
     }
@@ -208,9 +261,9 @@ export function processRollover(state: WRState, now: Date = new Date()) {
     evalDay = addDays(evalDay, 1)
   }
 
-  // Weekly & Boss: Deadline überschritten → failed + XP-Abzug (kein Joker)
+  // Weekly/Monthly/Campaign/Boss: Deadline überschritten → failed + XP-Abzug (kein Joker)
   for (const q of state.quests) {
-    if ((q.kind === 'weekly' || q.kind === 'boss' || q.kind === 'penalty') && q.status === 'open' && daysBetween(q.dueDay, today) > 0) {
+    if ((q.kind === 'weekly' || q.kind === 'monthly' || q.kind === 'campaign' || q.kind === 'boss' || q.kind === 'penalty') && q.status === 'open' && daysBetween(q.dueDay, today) > 0) {
       q.status = 'failed'
       const factor = q.kind === 'penalty' ? PENALTY_FACTOR : WEEKLY_PENALTY_FACTOR
       const losses: Partial<Record<StatId, number>> = {}
@@ -297,7 +350,12 @@ export function resolveDayWithJoker(state: WRState, pending: PendingDay) {
   })
 }
 
-export function resolveDayWithPenalty(state: WRState, pending: PendingDay, now: Date = new Date()) {
+export function resolveDayWithPenalty(
+  state: WRState,
+  pending: PendingDay,
+  now: Date = new Date(),
+  penaltyIndex: number = Math.floor(Math.random() * PENALTY_QUESTS.length),
+) {
   const today = todayKey(now)
   const losses: Partial<Record<StatId, number>> = {}
   for (const id of pending.missedQuestIds) {
@@ -312,7 +370,7 @@ export function resolveDayWithPenalty(state: WRState, pending: PendingDay, now: 
   state.streak = 0
 
   // Strafquest für heute
-  const p = PENALTY_QUESTS[Math.floor(Math.random() * PENALTY_QUESTS.length)]
+  const p = PENALTY_QUESTS[penaltyIndex] ?? PENALTY_QUESTS[0]
   state.quests.push({
     id: uid('q'),
     templateId: 'penalty',
@@ -321,8 +379,8 @@ export function resolveDayWithPenalty(state: WRState, pending: PendingDay, now: 
     desc: p.desc,
     day: today,
     dueDay: today,
-    rewards: { strength: 20, vitality: 10 },
-    proof: 'photo',
+    rewards: p.rewards ?? { strength: 20, vitality: 10 },
+    proof: 'text',
     status: 'open',
     required: false,
   })
@@ -417,13 +475,32 @@ export function resolveForecast(state: WRState, entryId: string, outcome: 'right
   checkHiddenQuests(state)
 }
 
-export function forecastStats(state: WRState): { resolved: number; right: number; accuracy: number } {
+export interface ForecastStatsResult {
+  resolved: number
+  right: number
+  accuracy: number
+  /** Brier-Score: Mittel über (p/100 − outcome)² — 0 = perfekt, 0.25 = Münzwurf-Niveau */
+  brier: number
+  /** echte Wetten: aufgelöste Prognosen mit 35 % ≤ p ≤ 70 % (keine Flucht in sichere Prognosen) */
+  realBets: number
+}
+
+export function forecastStats(state: WRState): ForecastStatsResult {
   const resolved = state.journal.filter((e) => e.forecast?.resolved)
   const right = resolved.filter((e) => e.forecast?.resolved === 'right')
+  const brier = resolved.length
+    ? resolved.reduce((sum, e) => {
+        const outcome = e.forecast!.resolved === 'right' ? 1 : 0
+        return sum + (e.forecast!.p / 100 - outcome) ** 2
+      }, 0) / resolved.length
+    : 1
+  const realBets = resolved.filter((e) => e.forecast!.p >= 35 && e.forecast!.p <= 70).length
   return {
     resolved: resolved.length,
     right: right.length,
     accuracy: resolved.length ? right.length / resolved.length : 0,
+    brier,
+    realBets,
   }
 }
 
@@ -435,7 +512,7 @@ export function checkHiddenQuests(state: WRState) {
   const conditions: Record<string, boolean> = {
     hidden_streak7: state.streak >= 7,
     hidden_streak30: state.streak >= 30,
-    hidden_calibration: fc.resolved >= 10 && fc.accuracy >= 0.7,
+    hidden_calibration: fc.resolved >= 10 && fc.brier <= 0.2 && fc.realBets >= 3,
     hidden_earlybird: state.earlyTrainings >= 3,
     hidden_journal20: state.journal.filter((e) => e.kind !== 'lore').length >= 20,
     hidden_firstrank: STAT_IDS.some((s) => state.stats[s].xp >= 500),

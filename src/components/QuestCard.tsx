@@ -10,6 +10,8 @@ import { SysButton } from './SystemWindow'
 const KIND_TAG: Record<QuestInstance['kind'], { label: string; cls: string }> = {
   daily: { label: 'DAILY', cls: 'text-glow2 border-glow/50' },
   weekly: { label: 'WEEKLY', cls: 'text-emerald-300 border-emerald-400/50' },
+  monthly: { label: 'MONTHLY', cls: 'text-violet-300 border-violet-400/50' },
+  campaign: { label: 'KAMPAGNE', cls: 'text-amber-300 border-amber-400/50' },
   penalty: { label: 'STRAFE', cls: 'text-danger border-danger/60' },
   hidden: { label: '???', cls: 'text-gold border-gold/50' },
   boss: { label: 'BOSS', cls: 'text-gold border-gold/60' },
