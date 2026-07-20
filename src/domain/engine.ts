@@ -6,7 +6,8 @@ import {
   MONTHLY_TEMPLATES,
   PENALTY_QUESTS,
   QUARTERLY_CAMPAIGN,
-  WEEKLY_TEMPLATES,
+  WEEKLY_CORE_TEMPLATES,
+  WEEKLY_ROTATION_TEMPLATES,
 } from '../data/seed'
 import {
   addDays,
@@ -127,10 +128,23 @@ function makeDailyQuests(state: WRState, day: string): QuestInstance[] {
   ]
 }
 
+/**
+ * Wählt 2 von 3 Rotation-Templates für die gegebene ISO-Kalenderwoche — deterministisch,
+ * damit dieselbe Woche bei erneuter Berechnung (z. B. Nachhol-Rollover) dieselbe Auswahl liefert.
+ * Jedes Template wird über 3 Wochen hinweg genau 2× aktiv, 1× ausgesetzt.
+ */
+function pickRotationTemplates(day: string) {
+  const wk = weekKey(day) // "YYYY-Wnn"
+  const weekNr = Number(wk.split('-W')[1])
+  const excludeIdx = weekNr % WEEKLY_ROTATION_TEMPLATES.length
+  return WEEKLY_ROTATION_TEMPLATES.filter((_, i) => i !== excludeIdx)
+}
+
 function makeWeeklyQuests(day: string): QuestInstance[] {
   const period = weekKey(day)
   const dueDay = sundayOf(day)
-  return WEEKLY_TEMPLATES.map((t) => ({
+  const templates = [...WEEKLY_CORE_TEMPLATES, ...pickRotationTemplates(day)]
+  return templates.map((t) => ({
     id: uid('q'),
     templateId: t.templateId,
     kind: 'weekly' as const,

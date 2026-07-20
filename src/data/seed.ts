@@ -78,7 +78,13 @@ export interface WeeklyTemplate {
   counterTarget?: number
 }
 
-export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
+/**
+ * Kern: läuft jede Woche. Rotation: 2 von 3 pro Woche (deterministisch nach ISO-Kalenderwoche,
+ * siehe pickRotationTemplates in engine.ts) — hält die Wochenlast bei 6 statt 7+ Slots,
+ * ohne Breite über den Monat zu verlieren (Entscheidung 2026-07-20: 7 feste Weeklies waren
+ * neben Jans anderen Zielen zu viel).
+ */
+export const WEEKLY_CORE_TEMPLATES: WeeklyTemplate[] = [
   {
     templateId: 'weekly_model',
     title: 'Modell der Woche — 5× anwenden',
@@ -87,22 +93,6 @@ export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
     proof: 'counter',
     formKind: 'model',
     counterTarget: 5,
-  },
-  {
-    templateId: 'weekly_psych',
-    title: 'Psychologie-Effekt beobachten & testen',
-    desc: 'Einen Effekt (Bias, evolutionärer Antrieb) eine Woche lang immersiv beobachten UND aktiv testen. Ein Effekt, nicht fünf.',
-    rewards: { influence: 60, perception: 20 },
-    proof: 'form',
-    formKind: 'psych',
-  },
-  {
-    templateId: 'weekly_sparring',
-    title: 'Sparring (Format A–D)',
-    desc: 'Mind. 1 Sparring: A) Rollenspiel mit Menschen, B) Spiel mit verdeckter Info, C) Red-Team-Duell, D) KI-Simulation im Claude-Projekt. Pflicht: Post-Game-Review. Format D (KI) max. 2×/Monat — A/B bevorzugen.',
-    rewards: { strategy: 50, influence: 30 },
-    proof: 'form',
-    formKind: 'sparring',
   },
   {
     templateId: 'weekly_uncomfortable',
@@ -122,20 +112,40 @@ export const WEEKLY_TEMPLATES: WeeklyTemplate[] = [
     formKind: 'warmth',
   },
   {
-    templateId: 'weekly_redteam',
-    title: 'Red-Team-Routine (2×)',
-    desc: 'Eigenen Plan angreifen: Blue Team (Plan in 5 Sätzen) → Red Team (3 Angriffe) → Patch + Canary. 10 Minuten pro Durchlauf.',
-    rewards: { strategy: 60 },
-    proof: 'form',
-    formKind: 'redteam',
-  },
-  {
     templateId: 'weekly_review',
     title: 'Weekly Review (Sonntag, 20 Min)',
     desc: 'Scoreboard prüfen → Meta-Regel der Woche → nächstes Modell + Effekt wählen → nächstes Sparring definieren → 1 Real-Life-Move, 2 Einsätze.',
     rewards: { intelligence: 40, strategy: 30, vitality: 10 },
     proof: 'form',
     formKind: 'weeklyreview',
+  },
+]
+
+/** Pool, aus dem pro Woche 2 von 3 ausgewählt werden (siehe pickRotationTemplates in engine.ts). */
+export const WEEKLY_ROTATION_TEMPLATES: WeeklyTemplate[] = [
+  {
+    templateId: 'weekly_psych',
+    title: 'Psychologie-Effekt beobachten & testen',
+    desc: 'Einen Effekt (Bias, evolutionärer Antrieb) eine Woche lang immersiv beobachten UND aktiv testen. Ein Effekt, nicht fünf.',
+    rewards: { influence: 60, perception: 20 },
+    proof: 'form',
+    formKind: 'psych',
+  },
+  {
+    templateId: 'weekly_sparring',
+    title: 'Sparring (Format A–D)',
+    desc: 'Mind. 1 Sparring: A) Rollenspiel mit Menschen, B) Spiel mit verdeckter Info, C) Red-Team-Duell, D) KI-Simulation im Claude-Projekt. Pflicht: Post-Game-Review. Format D (KI) max. 2×/Monat — A/B bevorzugen.',
+    rewards: { strategy: 50, influence: 30 },
+    proof: 'form',
+    formKind: 'sparring',
+  },
+  {
+    templateId: 'weekly_redteam',
+    title: 'Red-Team-Routine (2×)',
+    desc: 'Eigenen Plan angreifen: Blue Team (Plan in 5 Sätzen) → Red Team (3 Angriffe) → Patch + Canary. 10 Minuten pro Durchlauf.',
+    rewards: { strategy: 60 },
+    proof: 'form',
+    formKind: 'redteam',
   },
 ]
 
