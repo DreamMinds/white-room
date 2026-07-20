@@ -18,9 +18,9 @@ export const DEFAULT_TRAINING_PLAN: TrainingDay[] = [
     rewards: { strength: 25, agility: 35 },
   },
   {
-    title: 'Ruhetag / Recovery',
-    desc: 'Kein Training. Schlaf-Fokus, optional 15 Min lockere Mobilität. Wenn Recovery bricht, bricht Genialität als erstes — dieser Tag ist Teil des Systems, nicht seine Abwesenheit.',
-    rewards: { vitality: 30 },
+    title: 'Mobilität',
+    desc: 'Beweglichkeit, Dehnen, Haltung — leichter Tag zwischen den harten Einheiten, kein Explosivtraining.',
+    rewards: { vitality: 35, agility: 15 },
   },
   {
     title: 'Kraftsport (Calisthenics) + Plyo-Finish',
@@ -33,9 +33,9 @@ export const DEFAULT_TRAINING_PLAN: TrainingDay[] = [
     rewards: { strength: 25, agility: 35 },
   },
   {
-    title: 'Mobilität',
-    desc: 'Beweglichkeit, Dehnen, Haltung — echter leichter Tag, kein Explosivtraining.',
-    rewards: { vitality: 35, agility: 15 },
+    title: 'Ruhetag / Recovery',
+    desc: 'Kein Training. Schlaf-Fokus, optional 15 Min lockere Mobilität. Wenn Recovery bricht, bricht Genialität als erstes — dieser Tag ist Teil des Systems, nicht seine Abwesenheit.',
+    rewards: { vitality: 30 },
   },
 ]
 

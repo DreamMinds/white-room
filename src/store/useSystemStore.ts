@@ -18,6 +18,7 @@ import { DEFAULT_TRAINING_PLAN } from '../data/seed'
  * v1→v2: Rang-Boden eingeführt — peakXp pro Stat backfillen (= aktuelle XP).
  * v2→v3: Trainingsplan-Rework (5+1+1 mit Ruhetag) — die bei Erststart eingefrorene Kopie in
  * settings.trainingPlan wird durch den neuen DEFAULT_TRAINING_PLAN ersetzt (keine Custom-UI → sicher).
+ * v3→v4: Ruhetag auf Sonntag getauscht (Do = Mobilität) — Plan erneut ersetzen.
  */
 export function migratePersisted(s: WRState, version: number): WRState {
   if (version < 2 && s?.stats) {
@@ -25,7 +26,7 @@ export function migratePersisted(s: WRState, version: number): WRState {
       stat.peakXp = Math.max(stat.peakXp ?? 0, stat.xp ?? 0)
     }
   }
-  if (version < 3 && s?.settings) {
+  if (version < 4 && s?.settings) {
     s.settings.trainingPlan = DEFAULT_TRAINING_PLAN
   }
   return s
@@ -86,7 +87,7 @@ export const useSystemStore = create<SystemStore>()(
     })),
     {
       name: 'wr-system-v1',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => migratePersisted(persisted as WRState, version) as SystemStore,
       partialize: (s) => {
         // transiente UI-Events nicht persistieren

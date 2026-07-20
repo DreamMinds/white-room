@@ -270,8 +270,8 @@ describe('weekly_uncomfortable als Counter (Target 2)', () => {
   })
 })
 
-describe('Migration v2→v3', () => {
-  it('ersetzt den eingefrorenen Trainingsplan durch den neuen Default (Do = Ruhetag)', () => {
+describe('Migration auf v4 (Trainingsplan-Ersatz)', () => {
+  it('ersetzt den eingefrorenen Trainingsplan durch den neuen Default (So = Ruhetag, Do = Mobilität)', () => {
     const s = initialState()
     s.settings.trainingPlan = [
       { title: 'Alt-Mo', desc: '', rewards: { strength: 1 } },
@@ -284,7 +284,15 @@ describe('Migration v2→v3', () => {
     ]
     const migrated = migratePersisted(s, 2)
     expect(migrated.settings.trainingPlan).toEqual(DEFAULT_TRAINING_PLAN)
-    expect(migrated.settings.trainingPlan[3].title).toBe('Ruhetag / Recovery')
+    expect(migrated.settings.trainingPlan[6].title).toBe('Ruhetag / Recovery')
+    expect(migrated.settings.trainingPlan[3].title).toBe('Mobilität')
+  })
+
+  it('ersetzt den Plan auch bei v3-Ständen (Ruhetag-Tausch Do→So)', () => {
+    const s = initialState()
+    s.settings.trainingPlan = [...DEFAULT_TRAINING_PLAN.slice(3), ...DEFAULT_TRAINING_PLAN.slice(0, 3)]
+    const migrated = migratePersisted(s, 3)
+    expect(migrated.settings.trainingPlan).toEqual(DEFAULT_TRAINING_PLAN)
   })
 
   it('lässt peakXp-Backfill (v1→v2) weiterhin laufen', () => {
